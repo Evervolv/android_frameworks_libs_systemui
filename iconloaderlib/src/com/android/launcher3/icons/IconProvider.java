@@ -123,6 +123,13 @@ public class IconProvider {
         ThemeData td = getThemeDataForPackage(packageName);
 
         Drawable icon = null;
+        try {
+            icon = getFromIconPack(packageName);
+            if (icon != null) {
+                return icon;
+            }
+        } catch (Exception e) { }
+
         if (mCalendar != null && mCalendar.getPackageName().equals(packageName)) {
             icon = loadCalendarDrawable(iconDpi, td);
         } else if (mClock != null && mClock.getPackageName().equals(packageName)) {
@@ -146,8 +153,13 @@ public class IconProvider {
     }
 
     private Drawable loadActivityInfoIcon(ActivityInfo ai, int density) {
-        final int iconRes = ai.getIconResource();
         Drawable icon = null;
+        final IconPack iconPack = IconPackProvider.loadAndGetIconPack(mContext);
+        if (iconPack != null) {
+            icon = iconPack.getIcon(ai, null, "");
+            if (icon != null) return icon;
+        }
+        final int iconRes = ai.getIconResource();
         // Get the preferred density icon from the app's resources
         if (density != 0 && iconRes != 0) {
             try {
@@ -347,5 +359,13 @@ public class IconProvider {
          * Called when the global icon state changed, which can typically affect all icons
          */
         void onSystemIconStateChanged(String iconState);
+    }
+
+    private Drawable getFromIconPack(String packageName) {
+        final IconPack iconPack = IconPackProvider.loadAndGetIconPack(mContext);
+        if (iconPack == null) {
+            return null;
+        }
+        return iconPack.getIcon(packageName, null, "");
     }
 }
